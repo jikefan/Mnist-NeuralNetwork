@@ -7,8 +7,12 @@ transform = transforms.Compose([
 ])
 
 # 加载MNIST训练数据集
-train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+train_dataset = datasets.MNIST(root='data', train=True, download=True, transform=transform)
 
 # 查看第一个样本的标签
-first_label = train_dataset.train_labels[0]
+first_label = train_dataset.targets[0]
 print(f"First label type: {type(first_label)}")  # 输出应为：<class 'numpy.int64'>
+
+print(first_label.item())
+
+print(train_dataset.data.size())

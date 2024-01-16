@@ -28,7 +28,7 @@ class CustomDataset(Dataset):
         if self.transform:
             sample_feature = self.transform(sample_feature)
             
-        return torch.from_numpy(sample_feature).float(), torch.tensor(sample_label).long()  # 返回特征张量与标签张量（标签通常为LongTensor类型）
+        return torch.from_numpy(sample_feature).float(), torch.tensor(sample_label).float()  # 返回特征张量与标签张量（标签通常为LongTensor类型）
 
 # 使用交叉熵损失函数
 criterion = nn.CrossEntropyLoss()
@@ -133,15 +133,16 @@ def main():
     
     # 打印模型结构
     print(model)
-
-    # 每次训练的样本数量
-    batch_size = 100
+    
     # 训练循环
     num_epochs = 60
+    
     # 创建自定义数据集对象
     dataset = CustomDataset(train_set['X'] / 255.0, train_set['Y'])
+    
     # 设置DataLoader参数，例如批量大小、是否shuffle等
     batch_size = 64
+    
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     # 记录开始时间
     start_time = time.time()
@@ -174,9 +175,22 @@ def main():
             for batch_idx, (inputs, targets) in enumerate(test_dataloader):
                 
                 outputs = model(inputs)
-                _, predicted = torch.max(outputs.data, 1)  # 获取每个样本的最大概率对应的类别
+                predicted = torch.argmax(outputs, dim = 1)  # 获取每个样本的最大概率对应的类别
                 total_count += targets.size(0)
-                correct_count += (predicted == targets).sum().item()
+                # print('目标数量:', targets.size(0))
+                # print('预测:', predicted)
+                # print('目标:', targets[1])
+                # print((targets[1] == 1).nonzero().item())
+                # print('targets.shape[0]: ', targets.shape[0]) # 64
+                # 创建一个新的同等大小的一维数组来存储变换后的结果
+                new_array = torch.zeros(predicted.size(0), dtype=torch.int8)
+                for i in range(targets.shape[0]):
+                    # 获取当前行中值为1的位置（假设已知只有一个位置）
+                    labels = (targets[i] == 1).nonzero().item()
+                    # 将新的值赋给一维数组对应的位置
+                    new_array[i] = labels
+                    
+                correct_count += (predicted == new_array).sum().item()
             accuracy = correct_count / total_count
             print(f'准确度为: {accuracy} \t [{correct_count} / {total_count}]', end='\t')
             end_time = time.time()
